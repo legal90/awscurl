@@ -1,0 +1,62 @@
+
+project_name: awscurl
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+- env:
+  - CGO_ENABLED=0
+  goos:
+  - linux
+  - darwin
+  - windows
+  ignore:
+  - goos: windows
+    goarch: 386
+  - goos: darwin
+    goarch: 386
+
+archives:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+    windows: Windows
+    386: i386
+    amd64: x86_64
+  format_overrides:
+    - goos: windows
+      format: zip
+
+checksum:
+  name_template: 'checksums.txt'
+
+dockers:
+- image_templates:
+  - 'legal90/{{.ProjectName}}:{{ .Tag }}'
+  - 'legal90/{{.ProjectName}}:latest'
+  dockerfile: Dockerfile
+  binaries:
+  - '{{.ProjectName}}'
+  build_flag_templates:
+  - "--pull"
+  - "--label=org.opencontainers.image.created={{.Date}}"
+  - "--label=org.opencontainers.image.name={{.ProjectName}}"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  # Skips the docker push. Could be useful if you also do draft releases.
+  # If set to auto, the release will not be pushed to the docker repository
+  # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
+  # Defaults to false.
+  skip_push: auto
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
