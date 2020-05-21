@@ -30,9 +30,16 @@ type awsCURLFlags struct {
 	awsRegion       string
 }
 
-var flags awsCURLFlags
+var (
+	// Version and git commit SHA to include to the `--version` output
+	// These variables are supposed to be overriden on the build time using ldflags
+	version = "dev"
+	commit  = "none"
 
-// rootCmd represents the base command when called without any subcommands
+	flags awsCURLFlags
+)
+
+// rootCmd represents the base awscurl command when called without any subcommands (which we don't have here)
 var rootCmd = &cobra.Command{
 	Use:   "awscurl [URL]",
 	Short: "cURL with AWS request signing",
@@ -44,7 +51,7 @@ https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 `,
 	Args:    cobra.ExactArgs(1),
 	RunE:    runCurl,
-	Version: "0.2.0",
+	Version: fmt.Sprintf("%s, build %s", version, commit),
 }
 
 func main() {
