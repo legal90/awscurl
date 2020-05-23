@@ -43,10 +43,8 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "awscurl [URL]",
 	Short: "cURL with AWS request signing",
-	Long: `A simple CLI utility with cURL-like syntax allowing to send HTTP
-requests to AWS resources. awscurl automatically adds an authentication information
-to the HTTP request. It uses Siganture Version 4. More details:
-
+	Long: `A simple CLI utility with cURL-like syntax allowing to send HTTP requests to AWS resources.
+It automatically adds Siganture Version 4 to the request. More details:
 https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 `,
 	Args:    cobra.ExactArgs(1),
@@ -64,7 +62,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&flags.method, "request", "X", "GET", "Custom request method to use")
 	rootCmd.PersistentFlags().StringVarP(&flags.data, "data", "d", "", "Data payload to send within a POST request")
 	rootCmd.PersistentFlags().StringArrayVarP(&flags.headers, "header", "H", []string{},
-		`Extra HTTP header to include in the request. Example: "Content-Type: application/json" Could be used multiple times`)
+		`Extra HTTP header to include in the request. Example: "Content-Type: application/json". Could be used multiple times`)
 	rootCmd.PersistentFlags().StringVar(&flags.awsAccessKey, "access-key", "", "AWS Access Key ID to use for authentication")
 	rootCmd.PersistentFlags().StringVar(&flags.awsSecretKey, "secret-key", "", "AWS Secret Access Key to use for authentication")
 	rootCmd.PersistentFlags().StringVar(&flags.awsSessionToken, "session-token", "", "AWS Session Key to use for authentication")
