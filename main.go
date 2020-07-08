@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -60,9 +61,9 @@ func main() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&flags.method, "request", "X", "GET", "Custom request method to use")
-	rootCmd.PersistentFlags().StringVarP(&flags.data, "data", "d", "", "Data payload to send within a POST request")
+	rootCmd.PersistentFlags().StringVarP(&flags.data, "data", "d", "", `Data payload to send within a request. Could be also read from a file if prefixed with @, example: -d "@/path/to/file.json"`)
 	rootCmd.PersistentFlags().StringArrayVarP(&flags.headers, "header", "H", []string{},
-		`Extra HTTP header to include in the request. Example: "Content-Type: application/json". Could be used multiple times`)
+		`Extra HTTP header to include in the request. Example: -h "Content-Type: application/json". Could be used multiple times`)
 	rootCmd.PersistentFlags().StringVar(&flags.awsAccessKey, "access-key", "", "AWS Access Key ID to use for authentication")
 	rootCmd.PersistentFlags().StringVar(&flags.awsSecretKey, "secret-key", "", "AWS Secret Access Key to use for authentication")
 	rootCmd.PersistentFlags().StringVar(&flags.awsSessionToken, "session-token", "", "AWS Session Key to use for authentication")
@@ -87,9 +88,21 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var body io.Reader
+
+	if strings.HasPrefix(flags.data, "@") {
+		// Read data from file
+		fPath := flags.data[1:]
+		body, err = os.Open(fPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		body = strings.NewReader(flags.data)
+	}
+
 	// Build the HTTP request
 	url := args[0]
-	body := strings.NewReader(flags.data)
 	req, err := http.NewRequest(flags.method, url, body)
 	if err != nil {
 		return err

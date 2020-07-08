@@ -123,6 +123,14 @@ $ awscurl --service execute-api \
     -H "Content-Type: application/json" \
     "https://<prefix>.execute-api.us-east-1.amazonaws.com/<resource>"
 ```
+or reading data from the file:
+```
+$ awscurl --service execute-api \
+    -X POST \
+    -d @./path/to/file.json \
+    -H "Content-Type: application/json" \
+    "https://<prefix>.execute-api.us-east-1.amazonaws.com/<resource>"
+```
 
 ## Related projects
 
