@@ -4,7 +4,7 @@
 [AWS Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html),
 so AWS can identify and authorize your request.
 
-This implementation of `awscurl` tool is written in Go.
+This implementation of [awscurl](https://github.com/okigan/awscurl) tool is written in Go.
 It supports all AWS authentication methods available in AWS SDK for Go [v2](https://docs.aws.amazon.com/sdk-for-go/v2/api/), including:
 - [AssumeRole profiles](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html)
 - IAM roles for [Amazon EC2 Instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html)
