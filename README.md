@@ -18,7 +18,7 @@ Download appropriate version for your platform from [awscurl Releases](https://g
 Once downloaded and unpacked, the binary can be run from anywhere. For convinience, you can place the binary to `/usr/local/bin/`
 
 ### Docker
-awscurl container images are also released on DockerHub as [`legal90/docker`](https://hub.docker.com/repository/docker/legal90/awscurl)
+awscurl container images are also released on DockerHub as [`legal90/awscurl`](https://hub.docker.com/repository/docker/legal90/awscurl)
 
 ```
 $ docker run --rm \
