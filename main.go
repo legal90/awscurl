@@ -131,7 +131,6 @@ func runCurl(cmd *cobra.Command, args []string) error {
 	}
 
 	// Set TLS Client configuration
-	fmt.Println("Insecure SSL")
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: flags.insecure},
 	}
