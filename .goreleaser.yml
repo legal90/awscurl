@@ -19,26 +19,18 @@ builds:
     goarch: 386
 
 archives:
-- replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
-  format_overrides:
-    - goos: windows
-      format: zip
+- format: zip
 
 checksum:
   name_template: 'checksums.txt'
 
 dockers:
-- image_templates:
+- dockerfile: Dockerfile
+  goos: linux
+  goarch: amd64
+  image_templates:
   - 'legal90/{{.ProjectName}}:{{ .Tag }}'
   - 'legal90/{{.ProjectName}}:latest'
-  dockerfile: Dockerfile
-  binaries:
-  - '{{.ProjectName}}'
   build_flag_templates:
   - "--pull"
   - "--label=org.opencontainers.image.created={{.Date}}"
