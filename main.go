@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/sha256"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,6 +30,7 @@ type awsCURLFlags struct {
 	awsProfile      string
 	awsService      string
 	awsRegion       string
+	insecure        bool
 }
 
 var (
@@ -70,6 +72,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.awsProfile, "profile", "", "AWS awsProfile to use for authentication")
 	rootCmd.PersistentFlags().StringVar(&flags.awsService, "service", "execute-api", "The name of AWS Service, used for signing the request")
 	rootCmd.PersistentFlags().StringVar(&flags.awsRegion, "region", "", "AWS region to use for the request")
+	rootCmd.PersistentFlags().BoolVarP(&flags.insecure, "insecure", "k", false, "Allow insecure server connections when using SSL")
 
 	rootCmd.Flags().SortFlags = false
 }
@@ -127,8 +130,13 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Semd the request and print the response
-	client := new(http.Client)
+	// Set TLS Client configuration
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: flags.insecure},
+	}
+
+	// Send the request and print the response
+	client := http.Client{Transport: tr}
 	response, err := client.Do(req)
 	if err != nil {
 		return err
