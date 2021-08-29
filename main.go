@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	"fmt"
@@ -14,8 +15,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/spf13/cobra"
 )
 
@@ -124,8 +126,14 @@ func runCurl(cmd *cobra.Command, args []string) error {
 	// Sign the HTTP request. Special headers will be added to the given *http.Request
 	reqBody := readAndReplaceBody(req)
 	reqBodySHA256 := hashSHA256(reqBody)
-	signer := v4.NewSigner(cfg.Credentials)
-	err = signer.SignHTTP(req.Context(), req, reqBodySHA256, flags.awsService, cfg.Region, time.Now())
+	signer := v4.NewSigner()
+
+	creds, err := cfg.Credentials.Retrieve(context.Background())
+	if err != nil {
+		return err
+	}
+
+	err = signer.SignHTTP(req.Context(), creds, req, reqBodySHA256, flags.awsService, cfg.Region, time.Now())
 	if err != nil {
 		return err
 	}
@@ -153,24 +161,18 @@ func runCurl(cmd *cobra.Command, args []string) error {
 // getAWSConfig builgs the AWS Config based on the provided AWS-related flags
 func getAWSConfig(f awsCURLFlags) (aws.Config, error) {
 	var cfg aws.Config
-	var cfgSources external.Configs
+	var cfgSources []func(*config.LoadOptions) error
 
 	if f.awsProfile != "" {
-		awsProfileLoader := external.WithSharedConfigProfile(f.awsProfile)
+		awsProfileLoader := config.WithSharedConfigProfile(f.awsProfile)
 		cfgSources = append(cfgSources, awsProfileLoader)
 	}
 	if f.awsAccessKey != "" && f.awsSecretKey != "" {
-		staticCredsLoader := external.WithCredentialsProvider{
-			CredentialsProvider: aws.StaticCredentialsProvider{
-				Value: aws.Credentials{
-					AccessKeyID: f.awsAccessKey, SecretAccessKey: f.awsSecretKey, SessionToken: f.awsSessionToken,
-				},
-			},
-		}
+		staticCredsLoader := config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(f.awsAccessKey, f.awsSecretKey, f.awsSessionToken))
 		cfgSources = append(cfgSources, staticCredsLoader)
 	}
 
-	cfg, err := external.LoadDefaultAWSConfig(cfgSources...)
+	cfg, err := config.LoadDefaultConfig(context.Background(), cfgSources...)
 	if err != nil {
 		return cfg, fmt.Errorf("Unable to load AWS config: %s", err)
 	}
