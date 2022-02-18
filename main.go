@@ -49,7 +49,7 @@ var rootCmd = &cobra.Command{
 	Use:   "awscurl [URL]",
 	Short: "cURL with AWS request signing",
 	Long: `A simple CLI utility with cURL-like syntax allowing to send HTTP requests to AWS resources.
-It automatically adds Siganture Version 4 to the request. More details:
+It automatically adds Signature Version 4 to the request. More details:
 https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 `,
 	Args:    cobra.ExactArgs(1),
@@ -150,9 +150,19 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	defer response.Body.Close()
-	scanner := bufio.NewScanner(response.Body)
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+	var line string
+
+	reader := bufio.NewReader(response.Body)
+	for err == nil {
+		line, err = reader.ReadString('\n')
+		if err == nil {
+			fmt.Print(line)
+		}
+	}
+
+	if err != nil && err != io.EOF {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		return err
 	}
 
 	return nil
