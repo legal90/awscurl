@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -13,6 +12,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	urls "net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
@@ -33,6 +34,7 @@ type awsCURLFlags struct {
 	awsService      string
 	awsRegion       string
 	insecure        bool
+	proxy           string
 }
 
 var (
@@ -75,6 +77,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.awsService, "service", "execute-api", "The name of AWS Service, used for signing the request")
 	rootCmd.PersistentFlags().StringVar(&flags.awsRegion, "region", "", "AWS region to use for the request")
 	rootCmd.PersistentFlags().BoolVarP(&flags.insecure, "insecure", "k", false, "Allow insecure server connections when using SSL")
+	rootCmd.PersistentFlags().StringVar(&flags.proxy, "proxy", "", "Proxy to use for the request")
 
 	rootCmd.Flags().SortFlags = false
 }
@@ -143,6 +146,17 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: flags.insecure},
 	}
 
+	// Add proxy if needed
+	if flags.proxy != "" {
+		//creating the proxyURL
+		proxyURL, err := urls.Parse(flags.proxy)
+		if err != nil {
+			return err
+		}
+		//adding the proxy settings to the Transport object
+		tr.Proxy = http.ProxyURL(proxyURL)
+	}
+
 	// Send the request and print the response
 	client := http.Client{Transport: tr}
 	response, err := client.Do(req)
@@ -150,20 +164,13 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	defer response.Body.Close()
-	var line string
 
-	reader := bufio.NewReader(response.Body)
-	for err == nil {
-		line, err = reader.ReadString('\n')
-		if err == nil {
-			fmt.Print(line)
-		}
-	}
-
-	if err != nil && err != io.EOF {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+	var content []byte
+	content, err = ioutil.ReadAll(response.Body)
+	if err != nil {
 		return err
 	}
+	fmt.Println(string(content))
 
 	return nil
 }
