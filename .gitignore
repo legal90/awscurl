@@ -13,3 +13,4 @@
 
 # Build artifacts and other assets
 dist/
+/awscurl
