@@ -146,14 +146,14 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: flags.insecure},
 	}
 
-	// Add proxy if needed
+	// Add proxy settings if needed
 	if flags.proxy != "" {
-		//creating the proxyURL
+		// Parse *urls.URL from the given string
 		proxyURL, err := urls.Parse(flags.proxy)
 		if err != nil {
 			return err
 		}
-		//adding the proxy settings to the Transport object
+
 		tr.Proxy = http.ProxyURL(proxyURL)
 	}
 
