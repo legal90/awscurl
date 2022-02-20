@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -13,6 +12,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	urls "net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
@@ -33,6 +34,7 @@ type awsCURLFlags struct {
 	awsService      string
 	awsRegion       string
 	insecure        bool
+	proxy           string
 }
 
 var (
@@ -49,7 +51,7 @@ var rootCmd = &cobra.Command{
 	Use:   "awscurl [URL]",
 	Short: "cURL with AWS request signing",
 	Long: `A simple CLI utility with cURL-like syntax allowing to send HTTP requests to AWS resources.
-It automatically adds Siganture Version 4 to the request. More details:
+It automatically adds Signature Version 4 to the request. More details:
 https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 `,
 	Args:    cobra.ExactArgs(1),
@@ -75,6 +77,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.awsService, "service", "execute-api", "The name of AWS Service, used for signing the request")
 	rootCmd.PersistentFlags().StringVar(&flags.awsRegion, "region", "", "AWS region to use for the request")
 	rootCmd.PersistentFlags().BoolVarP(&flags.insecure, "insecure", "k", false, "Allow insecure server connections when using SSL")
+	rootCmd.PersistentFlags().StringVarP(&flags.proxy, "proxy", "x", "", `Use the specified HTTP proxy, example: -x "<[protocol://][user:password@]proxyhost[:port]>"`)
 
 	rootCmd.Flags().SortFlags = false
 }
@@ -143,6 +146,17 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: flags.insecure},
 	}
 
+	// Add proxy settings if needed
+	if flags.proxy != "" {
+		// Parse *urls.URL from the given string
+		proxyURL, err := urls.Parse(flags.proxy)
+		if err != nil {
+			return err
+		}
+
+		tr.Proxy = http.ProxyURL(proxyURL)
+	}
+
 	// Send the request and print the response
 	client := http.Client{Transport: tr}
 	response, err := client.Do(req)
@@ -150,10 +164,13 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	defer response.Body.Close()
-	scanner := bufio.NewScanner(response.Body)
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+
+	var content []byte
+	content, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
 	}
+	fmt.Println(string(content))
 
 	return nil
 }
