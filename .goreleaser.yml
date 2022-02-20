@@ -12,11 +12,9 @@ builds:
   - linux
   - darwin
   - windows
-  ignore:
-  - goos: windows
-    goarch: 386
-  - goos: darwin
-    goarch: 386
+  goarch:
+  - amd64
+  - arm64
 
 archives:
 - format: zip
