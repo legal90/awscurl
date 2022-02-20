@@ -77,7 +77,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.awsService, "service", "execute-api", "The name of AWS Service, used for signing the request")
 	rootCmd.PersistentFlags().StringVar(&flags.awsRegion, "region", "", "AWS region to use for the request")
 	rootCmd.PersistentFlags().BoolVarP(&flags.insecure, "insecure", "k", false, "Allow insecure server connections when using SSL")
-	rootCmd.PersistentFlags().StringVar(&flags.proxy, "proxy", "", "Proxy to use for the request")
+	rootCmd.PersistentFlags().StringVarP(&flags.proxy, "proxy", "x", "", `Use the specified HTTP proxy, example: -x "<[protocol://][user:password@]proxyhost[:port]>"`)
 
 	rootCmd.Flags().SortFlags = false
 }
