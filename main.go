@@ -33,6 +33,7 @@ type awsCURLFlags struct {
 	awsProfile      string
 	awsService      string
 	awsRegion       string
+	include         bool
 	insecure        bool
 	proxy           string
 }
@@ -76,6 +77,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.awsProfile, "profile", "", "AWS awsProfile to use for authentication")
 	rootCmd.PersistentFlags().StringVar(&flags.awsService, "service", "execute-api", "The name of AWS Service, used for signing the request")
 	rootCmd.PersistentFlags().StringVar(&flags.awsRegion, "region", "", "AWS region to use for the request")
+	rootCmd.PersistentFlags().BoolVarP(&flags.include, "include", "i", false, "Include the HTTP response headers in the output.")
 	rootCmd.PersistentFlags().BoolVarP(&flags.insecure, "insecure", "k", false, "Allow insecure server connections when using SSL")
 	rootCmd.PersistentFlags().StringVarP(&flags.proxy, "proxy", "x", "", `Use the specified HTTP proxy, example: -x "<[protocol://][user:password@]proxyhost[:port]>"`)
 
@@ -170,6 +172,19 @@ func runCurl(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	if flags.include {
+		fmt.Printf("%s %d\n", response.Proto, response.StatusCode)
+
+		for header := range response.Header {
+			for _, value := range response.Header.Values(header) {
+				fmt.Printf("%s: %s\n", header, value)
+			}
+		}
+
+		fmt.Print("\n")
+	}
+
 	fmt.Println(string(content))
 
 	return nil
