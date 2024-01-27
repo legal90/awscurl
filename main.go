@@ -70,7 +70,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&flags.method, "request", "X", "GET", "Custom request method to use")
 	rootCmd.PersistentFlags().StringVarP(&flags.data, "data", "d", "", `Data payload to send within a request. Could be also read from a file if prefixed with @, example: -d "@/path/to/file.json"`)
 	rootCmd.PersistentFlags().StringArrayVarP(&flags.headers, "header", "H", []string{},
-		`Extra HTTP header to include in the request. Example: -h "Content-Type: application/json". Could be used multiple times`)
+		`Extra HTTP header to include in the request. Example: -H "Content-Type: application/json". Could be used multiple times`)
 	rootCmd.PersistentFlags().StringVar(&flags.awsAccessKey, "access-key", "", "AWS Access Key ID to use for authentication")
 	rootCmd.PersistentFlags().StringVar(&flags.awsSecretKey, "secret-key", "", "AWS Secret Access Key to use for authentication")
 	rootCmd.PersistentFlags().StringVar(&flags.awsSessionToken, "session-token", "", "AWS Session Key to use for authentication")
