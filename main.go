@@ -119,7 +119,7 @@ func runCurl(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, h := range flags.headers {
-		hParts := strings.Split(h, ":")
+		hParts := strings.SplitN(h, ":", 2)
 		if len(hParts) != 2 {
 			return fmt.Errorf(`Error: Invalid header: %s. It should be in the format "Name: Value"`, h)
 		}
