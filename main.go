@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"strings"
 	"time"
@@ -35,6 +36,7 @@ type awsCURLFlags struct {
 	awsRegion       string
 	include         bool
 	insecure        bool
+	verbose         bool
 	proxy           string
 }
 
@@ -79,6 +81,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.awsRegion, "region", "", "AWS region to use for the request")
 	rootCmd.PersistentFlags().BoolVarP(&flags.include, "include", "i", false, "Include the HTTP response headers in the output.")
 	rootCmd.PersistentFlags().BoolVarP(&flags.insecure, "insecure", "k", false, "Allow insecure server connections when using SSL")
+	rootCmd.PersistentFlags().BoolVarP(&flags.verbose, "verbose", "v", false, "Debug HTTP request and response parameters")
 	rootCmd.PersistentFlags().StringVarP(&flags.proxy, "proxy", "x", "", `Use the specified HTTP proxy, example: -x "<[protocol://][user:password@]proxyhost[:port]>"`)
 
 	rootCmd.Flags().SortFlags = false
@@ -159,8 +162,13 @@ func runCurl(cmd *cobra.Command, args []string) error {
 		tr.Proxy = http.ProxyURL(proxyURL)
 	}
 
+	var roundTripper http.RoundTripper = tr
+	if flags.verbose {
+		roundTripper = &httpLoggingTransport{wrappedTransport: tr}
+	}
+
 	// Send the request and print the response
-	client := http.Client{Transport: tr}
+	client := http.Client{Transport: roundTripper}
 	response, err := client.Do(req)
 	if err != nil {
 		return err
@@ -229,4 +237,19 @@ func hashSHA256(content []byte) string {
 	h := sha256.New()
 	h.Write(content)
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+type httpLoggingTransport struct {
+	wrappedTransport *http.Transport
+}
+
+func (lt *httpLoggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	bytes, _ := httputil.DumpRequestOut(r, true)
+	resp, err := lt.wrappedTransport.RoundTrip(r)
+	respBytes, _ := httputil.DumpResponse(resp, true)
+	bytes = append(bytes, []byte("RESPONSE ")...)
+	bytes = append(bytes, respBytes...)
+	fmt.Fprintf(os.Stderr, "REQUEST %s\n", bytes)
+
+	return resp, err
 }
